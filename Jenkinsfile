@@ -1,19 +1,37 @@
 pipeline {
-    agent any 
+    agent any
+
     stages {
-        stage('Build') { 
+        stage("Dev env") {
+            options {
+                timeout(time: 3, unit: "SECONDS")
+            }
+
             steps {
-               echo 'Building....' 
+                script {
+                    Exception caughtException = null
+
+                    catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                        try { 
+                            echo "Started stage Dev env"
+                            sleep(time: 5, unit: "SECONDS")
+                        } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                            error "Caught ${e.toString()}" 
+                        } catch (Throwable e) {
+                            caughtException = e
+                        }
+                    }
+
+                    if (caughtException) {
+                        error caughtException.message
+                    }
+                }
             }
         }
-        stage('Test') { 
+
+        stage("Production") {
             steps {
-                echo 'Testing....' 
-            }
-        }
-        stage('Deploy') { 
-            steps {
-                echo 'Deploy....' 
+                echo "Started stage Production"
             }
         }
     }
